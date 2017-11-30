@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>CryptoPal</title>
+</head>
+<body>
+<h1>CryptoPal</h1>
+<hr>
+<div>
+  <p>Enter Ticket Name, See Ratio Breakdown</p>
+  <input type="text" id="currency" placeholder="ZEC" value="zec">
+  <button onclick="getByType()">Submit</button>
+</div>
+<div id="goldenBalance"></div>
+<hr>
+<div id="goldenHen"></div>
+<hr>
+<div id="goldenEgg"></div>
+
+<!-- <div>
+  <h4>Coins</h4>
+  <select id="goldenOptions" class="coins" name="coins"></select>
+</div> -->
+
+<!-- <hr> -->
+
+
+<script type="text/javascript">
+const market = 'http://www.coincap.io/front'
+const globeMkt = 'http://www.coincap.io/global'
+const coins = 'http://www.coincap.io/coins'
+var marketCache = ''
+
+// request action
+// returns Promise
+function request(url) {
+  var method = 'GET';
+  var data = null;
+
+  // Return a new promise.
+  return new Promise(function (resolve, reject) {
+    // Do the usual XHR stuff
+    var req = new XMLHttpRequest()
+    req.open(method, url)
+    req.onload = function () {
+      // This is called even on 404 etc
+      // so check the status
+      if (req.status == 200) {
+        // Resolve the promise with the response text
+        resolve(req.response)
+      } else {
+        // Otherwise reject with the status text
+        // which will hopefully be a meaningful error
+        reject(Error(req.statusText))
+      }
+    }
+
+    // Handle network errors
+    req.onerror = function () {
+      reject(Error('Network Error'))
+    }
+
+    // Make the request!!
+    req.send();
+  })
+}
+
+function calculateByType(type, data) {
+  let template = ''
+  var statsCtx = document.getElementById('goldenStats')
+  var marketCtx = document.getElementById('goldenHen')
+  var tabCtx = document.getElementById('goldenEgg')
+  let typeMarket = marketCache.filter(i => (i.short === type.toUpperCase()))[0]
+  let typePrice = parseFloat(typeMarket.price + '').toFixed(2)
+
+  for (let i = 0; i < marketCache.length; i++) {
+    let price = parseFloat(marketCache[i].price).toFixed(2)
+    let ratio = (typePrice / price).toFixed(3)
+    if (type.toUpperCase() !== marketCache[i].short) template += `<tr><td>${type.toUpperCase()}/${marketCache[i].short}</td><td>Ratio: ${ratio}</td><td>Price: ${price}</td></tr>\n`
+  }
+
+  marketCtx.innerHTML = `<table><tr><td>${type.toUpperCase()}:${typePrice}</td><td>Cap: ${typeMarket.mktcap}</td><td>Supply: ${typeMarket.supply}</td><td>Volume: ${typeMarket.volume} (${typeMarket.cap24hrChange}%)</td></tr></table>`
+  tabCtx.innerHTML = `<table>${template}</table>`
+}
+
+function getByType() {
+  let crncy = document.getElementById('currency').value
+  calculateByType(crncy)
+}
+
+request(market)
+  .then(function(res){
+    marketCache = JSON.parse(res)
+  }, function(err) {
+    console.log('err', err)
+  })
+
+</script>
+
+
+</body>
+</html>
